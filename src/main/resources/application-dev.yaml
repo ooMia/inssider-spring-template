@@ -1,0 +1,10 @@
+server.port: 8080
+
+spring.datasource.host: localhost
+
+spring.jpa.hibernate:
+  ddl-auto: create-drop
+  show_sql: true
+  format_sql: true
+
+management.endpoints.web.exposure.include: "*"

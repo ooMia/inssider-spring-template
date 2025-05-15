@@ -7,21 +7,15 @@ plugins {
 group = "com.example"
 version = "0.0.1-SNAPSHOT"
 
+springBoot {
+    buildInfo()
+}
+
 val javaVersion =
     file("${project.rootDir}/.java-version")
         .readText()
         .trim()
         .toIntOrNull() ?: error(".java-version 파일이 없거나 올바르지 않습니다.")
-
-tasks.processResources {
-    filesMatching("application.yaml") {
-        expand(
-            "_appName" to project.name,
-            "_appGroup" to project.group,
-            "_appVersion" to project.version,
-        )
-    }
-}
 
 java {
     toolchain {
@@ -43,6 +37,10 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-rest")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.postgresql:postgresql")
+    // implementation("com.mysql:mysql-connector-j")
 
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

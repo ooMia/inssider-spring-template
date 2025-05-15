@@ -1,0 +1,96 @@
+x-postgres-template: &postgres-template
+  image: postgres:latest
+  restart: "on-failure:1"
+  healthcheck:
+    test:
+      [
+        "CMD",
+        "pg_isready",
+        "-U",
+        "${POSTGRES_USER:-user}",
+        "-d",
+        "${POSTGRES_DB:?error}",
+      ]
+    interval: 10s
+    timeout: 10s
+    retries: 3
+  ports:
+    - "${POSTGRES_PORT:-5432}:5432"
+
+services:
+  app-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    env_file: .env
+    environment:
+      APP_PORT: ${APP_PORT:-8080}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres-prod}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:?error}
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:${APP_PORT:-8080}/actuator/health",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+
+  postgres-prod:
+    <<: *postgres-template
+    profiles: ["prod"]
+    hostname: postgres-prod
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?error}
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+
+  postgres-dev:
+    <<: *postgres-template
+    profiles: ["dev"]
+    env_file: .env.example
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dev}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+
+  mysql-dev:
+    profiles: ["dev"]
+    image: mysql:latest
+    restart: "on-failure:1"
+    env_file: .env.example
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "${MYSQL_USER:-user}",
+          "-p${MYSQL_PASSWORD:?error}",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dev}
+      MYSQL_USER: ${MYSQL_USER:-user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?error}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?error}
