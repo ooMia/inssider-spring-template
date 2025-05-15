@@ -12,6 +12,7 @@ brew install ktlint
 
 ```sh
 docker compose down && docker compose --profile dev up -d
+compose build --check
 ktlint --format
 
 # 현재 터미널 세션에 환경변수 적용 후 gradle test (profile=dev)
