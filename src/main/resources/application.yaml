@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: ${_appName}
+    group: ${_appGroup}
+    version: ${_appVersion}
