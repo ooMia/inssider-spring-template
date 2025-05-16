@@ -1,9 +1,11 @@
-name: Docker-Based Testing
-
+#
+# 프로젝트의 구성 파일에만 의존하여 즉석으로 테스트 환경을 구성하고 실행합니다.
+# 본 워크플로우에서 발생하는 문제의 대부분은 개발 환경에서 식별 및 해결 가능한 문제입니다.
+#
+name: Docker Project-based Testing
 on:
   pull_request:
     branches: [develop]
-
 jobs:
   test:
     runs-on: ubuntu-latest
