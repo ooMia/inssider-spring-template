@@ -33,7 +33,7 @@ jobs:
           host: ${{ secrets.AWS_INSTANCE_HOST }}
           port: ${{ secrets.AWS_SSH_PORT }}
           username: oomia
-          password: ${{ secrets.AWS_SSH_PASSWORD }}
+          key: ${{ secrets.AWS_SSH_PK }}
           script: whoami
 
       - name: Close SSH port after deploy
