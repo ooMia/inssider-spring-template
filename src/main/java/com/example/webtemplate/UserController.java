@@ -4,7 +4,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -38,7 +37,7 @@ class UserController {
 				.map(employee -> EntityModel.of(employee,
 						linkTo(methodOn(UserController.class).one(employee.getId())).withSelfRel(),
 						linkTo(methodOn(UserController.class).all()).withRel("users")))
-				.collect(Collectors.toList());
+				.toList();
 
 		return CollectionModel.of(users, linkTo(methodOn(UserController.class).all()).withSelfRel());
 	}
@@ -73,9 +72,7 @@ class UserController {
 					employee.setRole(newEmployee.getRole());
 					return repository.save(employee);
 				}) //
-				.orElseGet(() -> {
-					return repository.save(newEmployee);
-				});
+				.orElseGet(() -> repository.save(newEmployee));
 	}
 
 	@DeleteMapping("/users/{id}")
