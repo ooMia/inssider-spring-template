@@ -9,26 +9,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the code
-      - uses: actions/checkout@v4
-      - run: cp .env.example .env
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Step 2: Set up Java
       - uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version-file: .java-version
 
-      # Step 3: Set up Docker Compose
       - uses: docker/setup-compose-action@v1
         with:
           version: latest
-      - name: Set up Docker Compose
-        run: |
-          docker compose --profile dev up -d
 
-      # Step 4: Caching Gradle dependencies
-      - uses: actions/cache@v4
+      - name: Set up .env (dev profile)
+        run: cp .env.example .env
+
+      - name: Start Docker Compose (dev profile)
+        run: docker compose --profile dev up -d
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -37,20 +37,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # Step 5: Run Gradle tests
       - name: Run Gradle tests
         id: gradle-test
         run: |
           export $(grep -v '^#' .env | xargs)
           ./gradlew test
 
-      # Step 6: Show test results as CI output
-      - name: Upload Test Report
+      - name: Docker clean-up
+        run: docker compose down
+
+      - name: Upload Test Report on Failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-report
           path: build/reports/tests/test
 
-      # Step 7: Docker Compose cleanup
-      - run: docker compose down
+      - name: Show Workflow Duration on Success
+        if: success()
+        run: |
+          START_TIME=$(date -d "${{ github.event.pull_request.created_at }}" +%s)
+          END_TIME=$(date -u +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "Took ${DURATION} seconds"
