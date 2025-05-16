@@ -16,6 +16,11 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 class DatabaseEnvTests {
 
+    @Test
+    void contextLoads() {
+        // Temporal test to turn off lint warnings
+    }
+
     abstract static class BaseProfileTest {
         @Autowired
         Environment env;
