@@ -31,9 +31,9 @@ jobs:
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.AWS_INSTANCE_HOST }}
-          username: ${{ github.repository_owner }}
-          key: ${{ secrets.AWS_PERSONAL_PK }}
           port: ${{ secrets.AWS_SSH_PORT }}
+          username: oomia
+          password: ${{ secrets.AWS_SSH_PASSWORD }}
           script: whoami
 
       - name: Close SSH port after deploy
