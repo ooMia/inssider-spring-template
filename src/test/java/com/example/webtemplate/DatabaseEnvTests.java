@@ -13,9 +13,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 
+@SpringBootTest
 class DatabaseEnvTests {
 
-    @SpringBootTest
     abstract static class BaseProfileTest {
         @Autowired
         Environment env;
