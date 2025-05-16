@@ -68,7 +68,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
 
   mysql-dev:
-    profiles: ["dev"]
+    profiles: ["legacy"]
     image: mysql:latest
     restart: "on-failure:1"
     env_file: .env.example

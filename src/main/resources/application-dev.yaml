@@ -1,9 +1,16 @@
 server.port: 8080
 
-spring.datasource.host: localhost
+spring:
+  datasource:
+    host: ${POSTGRES_HOST:localhost}
+    port: ${POSTGRES_PORT:5432}
+    db: ${POSTGRES_DB:dev}
+    username: ${POSTGRES_USER:user}
+    password: ${POSTGRES_PASSWORD:user}
 
 spring.jpa.hibernate:
-  ddl-auto: create-drop
+  ddl-auto: update
+  open-in-view: false
   show_sql: true
   format_sql: true
 
