@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    initialization-mode: always
+    data:
+      schema: classpath:schema-prod.sql
+  jpa:
+    hibernate:
+      ddl-auto: none

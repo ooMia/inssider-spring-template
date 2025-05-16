@@ -8,3 +8,7 @@ spring.jpa.hibernate:
   format_sql: true
 
 management.endpoints.web.exposure.include: "*"
+
+logging.level.org.hibernate.SQL: debug
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder: trace
+logging.level.org.hibernate.tool.hbm2ddl: debug
