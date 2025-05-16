@@ -1,11 +1,12 @@
 # syntax=docker/dockerfile:latest
+# check=experimental=all
 
-# === [1] Base Stage: 공통 베이스 이미지 및 유틸리티 설치 ===
+# base 공통 베이스 이미지 및 유틸리티 설치
 FROM bellsoft/liberica-openjdk-alpine:24 AS base
 LABEL maintainer="ooMia"
 RUN apk add --no-cache dos2unix
 
-# === [2] Builder Stage: Gradle 빌드 및 의존성 캐시 활용 ===
+# builder Gradle 빌드 및 의존성 캐시 활용
 FROM base AS builder
 WORKDIR /app
 
@@ -21,7 +22,7 @@ RUN dos2unix gradlew && ./gradlew dependencies --no-daemon
 COPY . .
 RUN ./gradlew build -x test --parallel --no-daemon
 
-# === [3] Runner Stage: 실행용 경량 이미지 생성 ===
+# runner 실행용 경량 이미지 생성
 FROM bellsoft/liberica-openjre-alpine:24 AS runner
 WORKDIR /app
 COPY --from=builder /app/build/libs/*-SNAPSHOT.jar app.jar

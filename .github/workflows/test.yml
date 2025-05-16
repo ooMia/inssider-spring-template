@@ -1,0 +1,67 @@
+#
+# 프로젝트의 구성 파일에만 의존하여 즉석으로 테스트 환경을 구성하고 실행합니다.
+# 본 워크플로우에서 발생하는 문제의 대부분은 개발 환경에서 식별 및 해결 가능한 문제입니다.
+#
+name: Docker Project-based Testing
+on:
+  pull_request:
+    branches: [develop]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      SEGMENT_DOWNLOAD_TIMEOUT_MINS: "1"
+    steps:
+      - name: Record workflow start time
+        id: workflow-start
+        run: echo "start_time=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: "temurin"
+          java-version-file: .java-version
+          cache: "gradle"
+
+      - uses: docker/setup-compose-action@v1.2.0
+        with:
+          version: latest
+
+      - name: Set up .env (dev profile)
+        run: cp .env.example .env
+
+      - name: Start Docker Compose (dev profile)
+        run: docker compose --profile dev up -d
+
+      - name: Run Gradle tests
+        id: gradle-test
+        run: |
+          export $(grep -v '^#' .env | xargs)
+          TEST_START=$(date +%s)
+          ./gradlew test --no-daemon
+          TEST_END=$(date +%s)
+          TEST_DURATION=$((TEST_END - TEST_START))
+          echo "test_duration=${TEST_DURATION}" >> $GITHUB_OUTPUT
+
+      - name: Upload Test Report on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: test-report
+          path: build/reports/tests/test
+          retention-days: 1
+          overwrite: true
+
+      - name: Docker clean-up
+        run: docker compose down
+
+      - name: Show Test/Workflow Duration Ratio on Success
+        if: success()
+        run: |
+          WORKFLOW_START=${{ steps.workflow-start.outputs.start_time }}
+          WORKFLOW_END=$(date +%s)
+          WORKFLOW_DURATION=$((WORKFLOW_END - WORKFLOW_START))
+          TEST_DURATION=${{ steps.gradle-test.outputs.test_duration }}
+          RATIO=$(awk "BEGIN {printf \"%.2f\", $TEST_DURATION/$WORKFLOW_DURATION}")
+          echo "${TEST_DURATION} / ${WORKFLOW_DURATION} seconds ($RATIO)"

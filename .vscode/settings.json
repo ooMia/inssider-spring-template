@@ -4,5 +4,6 @@
   "java.test.config": {
     "vmArgs": ["-Dspring.profiles.active=dev"],
     "envFile": "${workspaceFolder}/.env"
-  }
+  },
+  "java.autobuild.enabled": true
 }
