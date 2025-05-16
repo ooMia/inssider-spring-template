@@ -1,0 +1,46 @@
+name: Deploy to EC2 with Docker Compose
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          aws-region: ap-northeast-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          retry-max-attempts: 3
+
+      - name: Open SSH port for GitHub Actions
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} \
+            --protocol tcp --port 22 --cidr 0.0.0.0/0 || true
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.AWS_INSTANCE_HOST }}
+          port: ${{ secrets.AWS_SSH_PORT }}
+          username: oomia
+          key: ${{ secrets.AWS_SSH_PK }}
+          script: |
+            cd inssider-spring-template
+            docker compose pull
+            docker compose up -d -y
+
+      - name: Close SSH port after deploy
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} \
+            --protocol tcp --port 22 --cidr 0.0.0.0/0 || true
