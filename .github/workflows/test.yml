@@ -2,7 +2,7 @@ name: Docker-Based Testing
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [develop]
 
 jobs:
   test:
@@ -10,16 +10,19 @@ jobs:
     env:
       SEGMENT_DOWNLOAD_TIMEOUT_MINS: "1"
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Record workflow start time
+        id: workflow-start
+        run: echo "start_time=$(date +%s)" >> $GITHUB_OUTPUT
 
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-java@v4.7.1
         with:
           distribution: "temurin"
           java-version-file: .java-version
           cache: "gradle"
 
-      - uses: docker/setup-compose-action@v1
+      - uses: docker/setup-compose-action@v1.2.0
         with:
           version: latest
 
@@ -39,21 +42,23 @@ jobs:
           TEST_DURATION=$((TEST_END - TEST_START))
           echo "test_duration=${TEST_DURATION}" >> $GITHUB_OUTPUT
 
-      - name: Docker clean-up
-        run: docker compose down
-
       - name: Upload Test Report on Failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: test-report
           path: build/reports/tests/test
+          retention-days: 1
+          overwrite: true
+
+      - name: Docker clean-up
+        run: docker compose down
 
       - name: Show Test/Workflow Duration Ratio on Success
         if: success()
         run: |
-          WORKFLOW_START=$(date -u -d "${{ github.event.pull_request.created_at }}" +%s)
-          WORKFLOW_END=$(date -u +%s)
+          WORKFLOW_START=${{ steps.workflow-start.outputs.start_time }}
+          WORKFLOW_END=$(date +%s)
           WORKFLOW_DURATION=$((WORKFLOW_END - WORKFLOW_START))
           TEST_DURATION=${{ steps.gradle-test.outputs.test_duration }}
           RATIO=$(awk "BEGIN {printf \"%.2f\", $TEST_DURATION/$WORKFLOW_DURATION}")
