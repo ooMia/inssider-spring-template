@@ -23,7 +23,7 @@ class WebtemplateApplicationTests {
 		LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
 		assertEquals(today, buildDate);
-		assertEquals("0.0.4-SNAPSHOT", buildProperties.getVersion());
+		assertEquals("0.0.6-SNAPSHOT", buildProperties.getVersion());
 		assertEquals("webtemplate", buildProperties.getArtifact());
 		assertEquals("webtemplate", buildProperties.getName());
 		assertEquals("com.example", buildProperties.getGroup());
