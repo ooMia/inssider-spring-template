@@ -33,7 +33,11 @@ jobs:
         id: gradle-test
         run: |
           export $(grep -v '^#' .env | xargs)
+          TEST_START=$(date +%s)
           ./gradlew test --no-daemon
+          TEST_END=$(date +%s)
+          TEST_DURATION=$((TEST_END - TEST_START))
+          echo "test_duration=${TEST_DURATION}" >> $GITHUB_OUTPUT
 
       - name: Docker clean-up
         run: docker compose down
@@ -45,10 +49,12 @@ jobs:
           name: test-report
           path: build/reports/tests/test
 
-      - name: Show Workflow Duration on Success
+      - name: Show Test/Workflow Duration Ratio on Success
         if: success()
         run: |
-          START_TIME=$(date -d "${{ github.event.pull_request.created_at }}" +%s)
-          END_TIME=$(date -u +%s)
-          DURATION=$((END_TIME - START_TIME))
-          echo "Took ${DURATION} seconds"
+          WORKFLOW_START=$(date -u -d "${{ github.event.pull_request.created_at }}" +%s)
+          WORKFLOW_END=$(date -u +%s)
+          WORKFLOW_DURATION=$((WORKFLOW_END - WORKFLOW_START))
+          TEST_DURATION=${{ steps.gradle-test.outputs.test_duration }}
+          RATIO=$(awk "BEGIN {printf \"%.2f\", $TEST_DURATION/$WORKFLOW_DURATION}")
+          echo "${TEST_DURATION} / ${WORKFLOW_DURATION} seconds ($RATIO)"
