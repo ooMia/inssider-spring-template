@@ -1,0 +1,55 @@
+name: Docker-Based Testing
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code
+      - uses: actions/checkout@v4
+
+      # Step 2: Set up Java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version-file: .java-version
+
+      # Step 3: Set up Docker Compose
+      - uses: docker/setup-compose-action@v1
+        with:
+          version: latest
+      - name: Set up Docker Compose
+        run: |
+          docker compose --profile dev up -d
+
+      # Step 4: Caching Gradle dependencies
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # Step 5: Run Gradle tests
+      - name: Run Gradle tests
+        id: gradle-test
+        run: |
+          export $(grep -v '^#' .env.example | xargs)
+          ./gradlew test
+
+      # Step 6: Show test results as CI output
+      - name: Upload Test Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test
+
+      # Step 7: Docker Compose cleanup
+      - run: docker compose down
