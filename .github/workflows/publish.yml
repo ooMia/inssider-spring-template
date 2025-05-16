@@ -1,8 +1,7 @@
-name: ci
+name: Publish Docker image on Semver tag push
 
 on:
   push:
-    branches: ["main"]
     tags:
       - "v*.*.*"
 jobs:
@@ -42,6 +41,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3.10.0
 
       - name: Build and push
+        if: ${{ steps.meta.outputs.tags != '' }}
         uses: docker/build-push-action@v6.17.0
         with:
           context: .
