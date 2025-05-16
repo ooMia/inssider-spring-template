@@ -1,0 +1,6 @@
+*
+
+!.gitignore
+!.env.example
+!compose.yaml
+!README.md
