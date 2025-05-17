@@ -1,8 +1,8 @@
 #
-# 프로젝트의 구성 파일에만 의존하여 즉석으로 테스트 환경을 구성하고 실행합니다.
-# 본 워크플로우에서 발생하는 문제의 대부분은 개발 환경에서 식별 및 해결 가능한 문제입니다.
+# DEV 프로필의 통합 테스트를 수행합니다.
+# 2인 이상의 협업 시, 서로의 코드가 멱등성을 위배하지는 않는지 점검합니다.
 #
-name: Docker Project-based Testing
+name: Integration Test (profile:dev)
 on:
   pull_request:
     branches: [develop]
@@ -28,18 +28,14 @@ jobs:
         with:
           version: latest
 
-      - name: Set up .env (dev profile)
-        run: cp .env.example .env
-
-      - name: Start Docker Compose (dev profile)
+      - name: Start Docker Compose (profile=dev)
         run: docker compose --profile dev up -d
 
-      - name: Run Gradle tests
+      - name: Run Gradle tests (profile=dev)
         id: gradle-test
         run: |
-          export $(grep -v '^#' .env | xargs)
           TEST_START=$(date +%s)
-          ./gradlew test --no-daemon
+          ./gradlew test -Dspring.profiles.active=dev
           TEST_END=$(date +%s)
           TEST_DURATION=$((TEST_END - TEST_START))
           echo "test_duration=${TEST_DURATION}" >> $GITHUB_OUTPUT
@@ -53,8 +49,8 @@ jobs:
           retention-days: 1
           overwrite: true
 
-      - name: Docker clean-up
-        run: docker compose down
+      - name: Docker clean-up (profile=dev)
+        run: docker compose --profile dev down
 
       - name: Show Test/Workflow Duration Ratio on Success
         if: success()
