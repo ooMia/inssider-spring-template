@@ -11,6 +11,7 @@ x-postgres-template: &postgres-template
   image: postgres:latest
   restart: "on-failure:1"
   environment:
+    POSTGRES_HOST: postgres
     POSTGRES_DB: ${POSTGRES_DB:?error}
     POSTGRES_USER: ${POSTGRES_USER:?error}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
@@ -26,24 +27,17 @@ x-app-template: &app-template
     POSTGRES_DB: ${POSTGRES_DB:?error}
     POSTGRES_USER: ${POSTGRES_USER:?error}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
-  healthcheck:
-    test:
-      [
-        "CMD",
-        "wget",
-        "--spider",
-        "-q",
-        "http://localhost:${APP_PORT}/actuator/health",
-      ]
+  ports: ["${APP_PORT}:${APP_PORT}"]
   depends_on:
     postgres:
       condition: service_healthy
 
 # == DOCKER COMPOSE ==
 services:
-  # == NO PROFILE ==
+  # == PROFILE: DEV ==
   postgres-dev:
     <<: *postgres-template
+    profiles: [dev]
     env_file: [".env.example"]
     ports: ["${POSTGRES_PORT}:${POSTGRES_PORT}"]
 
@@ -54,20 +48,37 @@ services:
     expose: ["${POSTGRES_PORT}"]
 
   # == PROFILE: STAGE ==
+  # STAGE는 DEV 산출물이 Docker를 기반으로 정상적으로 동작하는지 검증하기 위한 환경입니다.
   app-stage:
     <<: *app-template
     profiles: [stage]
     environment:
-      POSTGRES_HOST: localhost
+      SPRING_PROFILES_ACTIVE: dev
     build:
       context: .
-    ports: ["${APP_PORT}:8080"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:${APP_PORT}/users/1",
+        ]
 
   # == PROFILE: PROD ==
+  # PROD는 실제 운영 환경과 동일한 환경입니다.
+  # 데이터베이스 초기화를 선행하지 않으면 오류가 발생합니다.
   app:
     <<: *app-template
     profiles: [prod]
-    environment:
-      POSTGRES_HOST: postgres
     image: oomia/inssider-spring-template:latest
-    ports: ["${APP_PORT}:8080"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:${APP_PORT}/actuator/health",
+        ]

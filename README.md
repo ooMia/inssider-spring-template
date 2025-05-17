@@ -9,11 +9,11 @@ java --version
 brew install ktlint
 ktlint --format
 
-docker compose down && docker compose up -d
+docker compose down && docker compose --profile dev up -d
 docker build --check .
 ```
 
-# start development
+# development
 
 ```sh
 # 현재 터미널 세션에 환경변수 적용 후 작업
@@ -26,8 +26,10 @@ gradlew bootRun -Dspring.profiles.active=dev
 # + IDE extension으로도 실행 가능
 ```
 
-# operation
+# stage
 
 ```sh
-docker compose down && COMPOSE_BAKE=true docker compose --profile prod up -d --build
+docker compose --profile stage down --remove-orphans --volumes
+
+COMPOSE_BAKE=true docker compose --profile stage up --build
 ```
