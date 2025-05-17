@@ -1,37 +1,55 @@
 # initialization
 
 ```sh
+git clone https://github.com/ooMia/inssider-spring-template.git
+cd inssider-spring-template
+cp .env.example .env
+
 # https://sdkman.io/install/
 sdk install java 24-tem
+java --version
 
 # https://github.com/pinterest/ktlint
 brew install ktlint
-```
-
-# start development
-
-```sh
-docker compose down && docker compose --profile dev up -d
-docker build --check .
 ktlint --format
 
-# 현재 터미널 세션에 환경변수 적용 후 테스트
-export $(grep -v '^#' .env | xargs) && gradlew test -t
-
-# 빌드 1: 현재 터미널 세션에 환경변수 적용 후 빌드
-export $(grep -v '^#' .env | xargs) && gradlew clean build --info
-
-# 빌드 2: profile=dev 상태로 빌드 
-gradlew clean build -Dspring.profiles.active=dev
-
-# 실행 1: gradlew profile=dev 상태로 실행
-gradlew bootRun -Dspring.profiles.active=dev
-
-# 실행 2: IDE extension으로 실행
+docker build --check .
 ```
 
-# operation
+# development
 
 ```sh
-docker compose down && COMPOSE_BAKE=true docker compose --profile prod up -d --build
+docker compose down --volumes --remove-orphans
+docker compose up -d
+
+# profile=dev 자동 초기화 및 멱등성 보장
+gradlew test -Dspring.profiles.active=dev -t
+gradlew bootRun -Dspring.profiles.active=dev
+# + IDE extension으로도 실행 가능
+
+docker exec -it inssider-spring-template-postgres-1 psql -U user -d dev
+SELECT * FROM users;
+```
+
+# stage
+
+```sh
+docker compose --profile stage up --wait
+```
+
+# production
+
+```sh
+# cold-start 상황에서 데이터베이스 초기화
+# docker compose --profile prod down --volumes --remove-orphans
+# SPRING_PROFILES_ACTIVE=stage docker compose --profile prod up --wait
+
+# 이미지 최신화
+docker compose --profile prod pull
+
+docker compose --profile prod up -d
+
+# certbot을 활용하여 로컬 nginx 구동
+# /etc/nginx 경로 설정 수정하면 certbot 재설치
+# sudo certbot --nginx
 ```

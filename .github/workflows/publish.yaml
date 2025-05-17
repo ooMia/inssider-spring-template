@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -32,8 +33,6 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v6.17.0
-        env:
-          SPRING_PROFILES_ACTIVE: prod
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags || 'latest' }}
