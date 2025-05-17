@@ -1,5 +1,4 @@
 # == ENVIRONMENT VARIABLES ==
-# POSTGRES_HOST=localhost | postgres
 # POSTGRES_DB=dev
 # POSTGRES_PORT=5432
 # POSTGRES_USER=user
@@ -9,25 +8,25 @@
 # == POSTGRES TEMPLATE ==
 x-postgres-template: &postgres-template
   image: postgres:latest
-  restart: "on-failure:1"
+  env_file: [".env"]
   environment:
-    POSTGRES_HOST: postgres
     POSTGRES_DB: ${POSTGRES_DB:?error}
     POSTGRES_USER: ${POSTGRES_USER:?error}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
   healthcheck:
     test:
       ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+    interval: 3s
+    timeout: 3s
+    retries: 3
 
 # == SPRING APP TEMPLATE ==
 x-app-template: &app-template
-  environment:
-    APP_PORT: ${APP_PORT:?error}
-    POSTGRES_PORT: ${POSTGRES_PORT:?error}
-    POSTGRES_DB: ${POSTGRES_DB:?error}
-    POSTGRES_USER: ${POSTGRES_USER:?error}
-    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
   ports: ["${APP_PORT}:${APP_PORT}"]
+  healthcheck:
+      interval: 3s
+      timeout: 3s
+      retries: 5
   depends_on:
     postgres:
       condition: service_healthy
@@ -38,7 +37,6 @@ services:
   postgres-dev:
     <<: *postgres-template
     profiles: [dev]
-    env_file: [".env.example"]
     ports: ["${POSTGRES_PORT}:${POSTGRES_PORT}"]
 
   # == PROFILE: STAGE & PROD ==
@@ -49,13 +47,21 @@ services:
 
   # == PROFILE: STAGE ==
   # STAGE는 DEV 산출물이 Docker를 기반으로 정상적으로 동작하는지 검증하기 위한 환경입니다.
+  # DEV 프로필에서 자동 초기화를 담당해야하며, 이를 바탕으로 빠른 검증이 가능합니다.
   app-stage:
     <<: *app-template
     profiles: [stage]
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
     build:
       context: .
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      POSTGRES_HOST: postgres
+      # ref: .env
+      APP_PORT: ${APP_PORT:?error}
+      POSTGRES_PORT: ${POSTGRES_PORT:?error}
+      POSTGRES_DB: ${POSTGRES_DB:?error}
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
     healthcheck:
       test:
         [
@@ -68,11 +74,13 @@ services:
 
   # == PROFILE: PROD ==
   # PROD는 실제 운영 환경과 동일한 환경입니다.
-  # 데이터베이스 초기화를 선행하지 않으면 오류가 발생합니다.
+  # DEV 프로필에서의 자동 초기화를 수동으로 진행해야 합니다.
+  # 데이터베이스 초기화를 선행하지 않으면 앱 실행 시 오류가 발생합니다.
   app:
     <<: *app-template
     profiles: [prod]
     image: oomia/inssider-spring-template:latest
+    restart: "on-failure:1"
     healthcheck:
       test:
         [

@@ -2,7 +2,7 @@ server.port: 8080
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/dev
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/dev
     username: user
     password: user
 

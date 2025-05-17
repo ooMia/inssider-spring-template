@@ -40,7 +40,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.postgresql:postgresql")
-    // implementation("com.mysql:mysql-connector-j")
 
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
@@ -52,10 +51,14 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
+tasks {
+    val activeProfile = System.getProperty("spring.profiles.active")
 
-tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
-    systemProperty("spring.profiles.active", System.getProperty("spring.profiles.active"))
+    withType<Test> {
+        useJUnitPlatform()
+        systemProperty("spring.profiles.active", activeProfile)
+    }
+    withType<org.springframework.boot.gradle.tasks.run.BootRun> {
+        systemProperty("spring.profiles.active", activeProfile)
+    }
 }
