@@ -9,10 +9,6 @@
 x-postgres-template: &postgres-template
   image: postgres:latest
   env_file: [".env"]
-  environment:
-    POSTGRES_DB: ${POSTGRES_DB:?error}
-    POSTGRES_USER: ${POSTGRES_USER:?error}
-    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
   healthcheck:
     test:
       ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
@@ -24,26 +20,24 @@ x-postgres-template: &postgres-template
 x-app-template: &app-template
   ports: ["${APP_PORT}:${APP_PORT}"]
   healthcheck:
-      interval: 3s
-      timeout: 3s
-      retries: 5
+    interval: 3s
+    timeout: 3s
+    retries: 5
   depends_on:
     postgres:
       condition: service_healthy
 
 # == DOCKER COMPOSE ==
 services:
-  # == PROFILE: DEV ==
-  postgres-dev:
-    <<: *postgres-template
-    profiles: [dev]
-    ports: ["${POSTGRES_PORT}:${POSTGRES_PORT}"]
-
-  # == PROFILE: STAGE & PROD ==
+  # == NO PROFILE ==
   postgres:
     <<: *postgres-template
-    profiles: [stage, prod]
-    expose: ["${POSTGRES_PORT}"]
+    ports: ["${POSTGRES_PORT}:${POSTGRES_PORT}"]
+    environment:
+      # ref: .env
+      POSTGRES_DB: ${POSTGRES_DB:?error}
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
 
   # == PROFILE: STAGE ==
   # STAGE는 DEV 산출물이 Docker를 기반으로 정상적으로 동작하는지 검증하기 위한 환경입니다.
@@ -54,7 +48,7 @@ services:
     build:
       context: .
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: dev,stage
       POSTGRES_HOST: postgres
       # ref: .env
       APP_PORT: ${APP_PORT:?error}
@@ -74,13 +68,22 @@ services:
 
   # == PROFILE: PROD ==
   # PROD는 실제 운영 환경과 동일한 환경입니다.
-  # DEV 프로필에서의 자동 초기화를 수동으로 진행해야 합니다.
-  # 데이터베이스 초기화를 선행하지 않으면 앱 실행 시 오류가 발생합니다.
+  # Cold-start 환경에서는 STAGE 프로필에서의 초기화 작업이 선행되어야 합니다.
+  # 필요에 따라 `SPRING_PROFILES_ACTIVE`를 변경하여 운영 전략을 수정합니다.
   app:
     <<: *app-template
     profiles: [prod]
-    image: oomia/inssider-spring-template:latest
+    image: oomia/inssider-spring-template:0.0.10
     restart: "on-failure:1"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      POSTGRES_HOST: postgres
+      # ref: .env
+      APP_PORT: ${APP_PORT:?error}
+      POSTGRES_PORT: ${POSTGRES_PORT:?error}
+      POSTGRES_DB: ${POSTGRES_DB:?error}
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
     healthcheck:
       test:
         [
