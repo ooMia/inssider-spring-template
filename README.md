@@ -30,7 +30,7 @@ gradlew bootRun -Dspring.profiles.active=dev
 # stage
 
 ```sh
-docker compose --profile stage down --remove-orphans --volumes
+docker compose down --volumes --remove-orphans
 
-COMPOSE_BAKE=true docker compose --profile stage up --build
+COMPOSE_BAKE=true docker compose --profile stage up --build --wait 
 ```
