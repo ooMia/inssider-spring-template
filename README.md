@@ -41,10 +41,11 @@ docker compose --profile stage up --wait
 
 ```sh
 # cold-start 상황에서 데이터베이스 초기화
+# docker compose --profile prod down --volumes --remove-orphans
 # SPRING_PROFILES_ACTIVE=stage docker compose --profile prod up --wait
 
 # 이미지 최신화
 docker compose --profile prod pull
 
-docker compose --profile prod up
+docker compose --profile prod up -d
 ```
