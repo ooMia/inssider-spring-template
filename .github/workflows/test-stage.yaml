@@ -29,6 +29,9 @@ jobs:
         with:
           version: latest
 
+      - name: Set up .env (profile=stage)
+        run: cp .env.example .env
+
       - name: Start Docker Compose tests (profile=stage)
         id: gradle-test
         run: |
