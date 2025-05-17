@@ -8,10 +8,7 @@ on:
 
 jobs:
   docker:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     env:
       DOCKER_BUILD_RECORD_RETENTION_DAYS: 1
     steps:
