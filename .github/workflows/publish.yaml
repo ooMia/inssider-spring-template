@@ -5,9 +5,13 @@ on:
   push:
     tags:
       - "v*.*.*"
+
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     env:
       DOCKER_BUILD_RECORD_RETENTION_DAYS: 1
     steps:
@@ -32,8 +36,6 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v6.17.0
-        env:
-          SPRING_PROFILES_ACTIVE: prod
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags || 'latest' }}
