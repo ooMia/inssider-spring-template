@@ -1,0 +1,13 @@
+#
+# DDL 관리 전략을 세우고,
+# 이후 필요에 따라 프로필을 추가하여 적용합니다.
+#
+# 예시)
+# | 프로필       | ddl-auto        | 목적                      |
+# |------------|-----------------|------------------------- |
+# | dev        | create-drop     | 반복 가능한 개발             |
+# | stage      | update / create | DEV 산출물 검증. 일회성 초기화 |
+# | prod       | update          | 운영 시 기존 스키마 유지/확장   |
+# | maintenance| validate        | 운영 시 스키마 변경 없이 유지   |
+#
+spring.jpa.hibernate.ddl-auto: update

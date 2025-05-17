@@ -1,16 +1,13 @@
-server:
-  port: ${APP_PORT}
+server.port: ${APP_PORT}
 
 spring:
   datasource:
-    url: jdbc:postgresql://${spring.datasource.host}:${spring.datasource.port}/${spring.datasource.db}
     driver-class-name: org.postgresql.Driver
-    host: ${POSTGRES_HOST}
-    port: ${POSTGRES_PORT}
-    db: ${POSTGRES_DB}
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
 
 spring.jpa.open-in-view: false
+spring.jpa.hibernate.ddl-auto: none
 
 management.endpoints.web.exposure.include: health
