@@ -48,4 +48,8 @@ docker compose --profile stage up --wait
 docker compose --profile prod pull
 
 docker compose --profile prod up -d
+
+# certbot을 활용하여 로컬 nginx 구동
+# /etc/nginx 경로 설정 수정하면 certbot 재설치
+# sudo certbot --nginx
 ```
