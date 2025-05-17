@@ -3,31 +3,27 @@
 ```sh
 # https://sdkman.io/install/
 sdk install java 24-tem
+java --version
 
 # https://github.com/pinterest/ktlint
 brew install ktlint
+ktlint --format
+
+docker compose down && docker compose up -d
+docker build --check .
 ```
 
 # start development
 
 ```sh
-docker compose down && docker compose --profile dev up -d
-docker build --check .
-ktlint --format
+# 현재 터미널 세션에 환경변수 적용 후 작업
+export $(grep -v '^#' .env.example | xargs) 
 
-# 현재 터미널 세션에 환경변수 적용 후 테스트
-export $(grep -v '^#' .env | xargs) && gradlew test -t
-
-# 빌드 1: 현재 터미널 세션에 환경변수 적용 후 빌드
-export $(grep -v '^#' .env | xargs) && gradlew clean build --info
-
-# 빌드 2: profile=dev 상태로 빌드 
-gradlew clean build -Dspring.profiles.active=dev
-
-# 실행 1: gradlew profile=dev 상태로 실행
+# profile=dev 멱등성 보장
+gradlew test -Dspring.profiles.active=dev -t
+gradlew clean build -Dspring.profiles.active=dev --info
 gradlew bootRun -Dspring.profiles.active=dev
-
-# 실행 2: IDE extension으로 실행
+# + IDE extension으로도 실행 가능
 ```
 
 # operation
