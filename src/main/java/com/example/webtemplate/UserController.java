@@ -52,7 +52,7 @@ class UserController {
 
 	// tag::get-single-item[]
 	@GetMapping("/users/{id}")
-	EntityModel<User> one(@PathVariable Long id) {
+	EntityModel<User> one(@PathVariable("id") Long id) {
 
 		User employee = repository.findById(id) //
 				.orElseThrow(() -> new UserNotFoundException(id));
@@ -64,7 +64,7 @@ class UserController {
 	// end::get-single-item[]
 
 	@PutMapping("/users/{id}")
-	User replaceEmployee(@RequestBody User newEmployee, @PathVariable Long id) {
+	User replaceEmployee(@RequestBody User newEmployee, @PathVariable("id") Long id) {
 
 		return repository.findById(id) //
 				.map(employee -> {
@@ -76,7 +76,7 @@ class UserController {
 	}
 
 	@DeleteMapping("/users/{id}")
-	void deleteEmployee(@PathVariable Long id) {
+	void deleteEmployee(@PathVariable("id") Long id) {
 		repository.deleteById(id);
 	}
 }

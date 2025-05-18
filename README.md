@@ -23,6 +23,7 @@ docker compose down --volumes --remove-orphans
 docker compose up -d
 
 # profile=dev 자동 초기화 및 멱등성 보장
+gradlew clean build -x test
 gradlew test -Dspring.profiles.active=dev -t
 gradlew bootRun -Dspring.profiles.active=dev
 # + IDE extension으로도 실행 가능
